@@ -301,10 +301,14 @@ body {
   width: 100%;
 }
 
-/* History button */
-.history-btn {
+/* Header buttons */
+.header-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.history-btn, .tutor-btn {
   padding: 0.5rem 1rem;
-  background-color: var(--secondary-color);
   color: var(--white);
   border: none;
   border-radius: var(--border-radius);
@@ -313,8 +317,16 @@ body {
   transition: background-color 0.3s ease;
 }
 
-.history-btn:hover {
+.history-btn {
+  background-color: var(--secondary-color);
+}
+
+.tutor-btn {
   background-color: var(--accent-color);
+}
+
+.history-btn:hover, .tutor-btn:hover {
+  background-color: var(--primary-color);
 }
 
 /* End conversation button */
