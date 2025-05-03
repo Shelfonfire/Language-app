@@ -10,7 +10,7 @@ const HomePage = ({ language, onLanguageChange }) => {
   useEffect(() => {
     const fetchScenarios = async () => {
       try {
-        const response = await axios.get('https://work-2-thsfslggwztiguwl.prod-runtime.all-hands.dev/api/scenarios');
+        const response = await axios.get('https://work-2-bdwxlspnzusxeauy.prod-runtime.all-hands.dev/api/scenarios');
         setScenarios(response.data);
         setLoading(false);
       } catch (error) {
@@ -57,12 +57,20 @@ const HomePage = ({ language, onLanguageChange }) => {
               German
             </button>
           </div>
-          <button 
-            className="history-btn"
-            onClick={() => navigate('/history')}
-          >
-            View Progress History
-          </button>
+          <div className="header-buttons">
+            <button 
+              className="tutor-btn"
+              onClick={() => navigate('/tutor')}
+            >
+              AI Tutor
+            </button>
+            <button 
+              className="history-btn"
+              onClick={() => navigate('/history')}
+            >
+              View Progress History
+            </button>
+          </div>
         </div>
       </header>
 

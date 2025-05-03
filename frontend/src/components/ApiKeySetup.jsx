@@ -27,7 +27,7 @@ const ApiKeySetup = ({ onApiKeySubmit }) => {
     
     try {
       // Send API key to backend
-      await axios.post('https://work-2-thsfslggwztiguwl.prod-runtime.all-hands.dev/api/setup-env', {
+      await axios.post('https://work-2-bdwxlspnzusxeauy.prod-runtime.all-hands.dev/api/setup-env', {
         apiKey: apiKey
       });
       

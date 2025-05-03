@@ -5,6 +5,7 @@ import HomePage from './components/HomePage'
 import ChatPage from './components/ChatPage'
 import ApiKeySetup from './components/ApiKeySetup'
 import HistoryPage from './components/HistoryPage'
+import TutorPage from './components/TutorPage'
 
 function App() {
   const [apiKeySet, setApiKeySet] = useState(false);
@@ -58,6 +59,16 @@ function App() {
             element={
               apiKeySet ? (
                 <HistoryPage />
+              ) : (
+                <Navigate to="/setup" />
+              )
+            } 
+          />
+          <Route 
+            path="/tutor" 
+            element={
+              apiKeySet ? (
+                <TutorPage />
               ) : (
                 <Navigate to="/setup" />
               )

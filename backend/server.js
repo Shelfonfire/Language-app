@@ -9,6 +9,9 @@ dotenv.config();
 const app = express();
 const PORT = 12001;
 
+// Import routes
+const tutorAgentRoutes = require('./routes/tutorAgent');
+
 // Middleware
 app.use(cors({
   origin: '*',
@@ -61,6 +64,8 @@ const scenarios = [
 ];
 
 // Routes
+app.use('/api/tutor', tutorAgentRoutes);
+
 app.get('/api/scenarios', (req, res) => {
   res.json(scenarios);
 });

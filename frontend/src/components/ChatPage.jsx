@@ -19,7 +19,7 @@ const ChatPage = ({ language }) => {
     const fetchScenarioData = async () => {
       try {
         // Get scenario info
-        const scenarioResponse = await axios.get('https://work-2-thsfslggwztiguwl.prod-runtime.all-hands.dev/api/scenarios');
+        const scenarioResponse = await axios.get('https://work-2-bdwxlspnzusxeauy.prod-runtime.all-hands.dev/api/scenarios');
         const scenario = scenarioResponse.data.find(s => s.id === scenarioId);
         
         if (scenario) {
@@ -27,7 +27,7 @@ const ChatPage = ({ language }) => {
           
           // Get initial message from API
           try {
-            const response = await axios.post('https://work-2-thsfslggwztiguwl.prod-runtime.all-hands.dev/api/chat', {
+            const response = await axios.post('https://work-2-bdwxlspnzusxeauy.prod-runtime.all-hands.dev/api/chat', {
               messages: [],
               language: language,
               scenario: scenarioId
@@ -81,7 +81,7 @@ const ChatPage = ({ language }) => {
         return;
       }
       
-      const response = await axios.post('https://work-2-thsfslggwztiguwl.prod-runtime.all-hands.dev/api/chat', {
+      const response = await axios.post('https://work-2-bdwxlspnzusxeauy.prod-runtime.all-hands.dev/api/chat', {
         messages: [...messages, userMessage],
         language,
         scenario: scenarioId
@@ -130,7 +130,7 @@ const ChatPage = ({ language }) => {
     
     try {
       // Send a message to trigger assessment
-      const response = await axios.post('https://work-2-thsfslggwztiguwl.prod-runtime.all-hands.dev/api/chat', {
+      const response = await axios.post('https://work-2-bdwxlspnzusxeauy.prod-runtime.all-hands.dev/api/chat', {
         messages: [
           ...messages,
           { role: 'user', content: 'Thank you for the conversation. Goodbye!' }
