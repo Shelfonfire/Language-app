@@ -10,7 +10,13 @@ export default defineConfig({
     cors: true,
     headers: {
       'Access-Control-Allow-Origin': '*',
+      'X-Frame-Options': 'ALLOWALL'
     },
+    hmr: {
+      clientPort: 443,
+      host: 'work-1-zxfdpajvkmbapyvk.prod-runtime.all-hands.dev'
+    },
+    strictPort: true,
     allowedHosts: true
   }
 })

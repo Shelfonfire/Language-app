@@ -201,6 +201,11 @@ const HistoryPage = () => {
                 </div>
               </div>
             ))}
+            <div className="history-actions">
+              <button className="primary-btn" onClick={() => navigate('/')}>
+                Return to Home
+              </button>
+            </div>
           </div>
         </>
       ) : (

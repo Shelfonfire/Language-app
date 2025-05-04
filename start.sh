@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Start the backend server
-cd /workspace/language-learning-app/backend
+cd /workspace/Language-app/backend
 PORT=12001 npm run dev &
 BACKEND_PID=$!
 
 # Start the frontend server
-cd /workspace/language-learning-app/frontend
+cd /workspace/Language-app/frontend
 PORT=12000 npm run dev &
 FRONTEND_PID=$!
 
@@ -22,8 +22,8 @@ function cleanup {
 trap cleanup SIGINT
 
 echo "Servers started!"
-echo "Frontend running at: https://work-1-thsfslggwztiguwl.prod-runtime.all-hands.dev"
-echo "Backend running at: https://work-2-thsfslggwztiguwl.prod-runtime.all-hands.dev"
+echo "Frontend running at: https://work-1-zxfdpajvkmbapyvk.prod-runtime.all-hands.dev"
+echo "Backend running at: https://work-2-zxfdpajvkmbapyvk.prod-runtime.all-hands.dev"
 echo "Press Ctrl+C to stop both servers"
 
 # Keep the script running

@@ -65,10 +65,125 @@ app.get('/api/scenarios', (req, res) => {
   res.json(scenarios);
 });
 
+// Mock responses for testing without API key
+const mockResponses = {
+  initial: {
+    role: 'assistant',
+    content: 'Bonjour! Comment puis-je vous aider aujourd\'hui?'
+  },
+  greeting: {
+    role: 'assistant',
+    content: 'Bonjour! Comment allez-vous? Je suis ravi de parler avec vous en français aujourd\'hui.',
+    tool_calls: [
+      {
+        name: 'addHint',
+        arguments: JSON.stringify({
+          type: 'vocabulary',
+          content: 'Common greetings: "Bonjour" (Hello/Good day), "Salut" (Hi/Hey), "Comment allez-vous?" (How are you? - formal), "Comment ça va?" (How are you? - informal)'
+        })
+      }
+    ]
+  },
+  restaurant: {
+    role: 'assistant',
+    content: 'Bienvenue au restaurant! Avez-vous une réservation? Sinon, nous avons une table pour deux près de la fenêtre.',
+    tool_calls: [
+      {
+        name: 'addToVocab',
+        arguments: JSON.stringify({
+          word: 'réservation (reservation)'
+        })
+      }
+    ]
+  },
+  correction: {
+    role: 'assistant',
+    content: 'Je comprends ce que vous essayez de dire. Permettez-moi de vous aider avec quelques corrections.',
+    tool_calls: [
+      {
+        name: 'createCorrectionDialogueBox',
+        arguments: JSON.stringify({
+          items: [
+            '"Je suis allé" instead of "Je suis allé" - correct verb conjugation',
+            '"au restaurant" instead of "à restaurant" - correct preposition with article',
+            '"J\'ai mangé" instead of "Je mangé" - correct use of auxiliary verb'
+          ]
+        })
+      }
+    ]
+  },
+  challenge: {
+    role: 'assistant',
+    content: 'Très bien! Maintenant, essayons quelque chose de plus difficile pour pratiquer votre français.',
+    tool_calls: [
+      {
+        name: 'addChallenge',
+        arguments: JSON.stringify({
+          level: 'intermediate',
+          content: 'Décrivez votre plat préféré et comment on le prépare. Utilisez le temps présent et au moins 5 verbes différents.'
+        })
+      }
+    ]
+  },
+  goodbye: {
+    role: 'assistant',
+    content: 'Merci pour cette conversation! Voici votre évaluation:\n\nFluency: 7/10\nVocabulary: 6/10\nGrammar: 8/10\nSpeed: 7/10\n\nYou did well with basic conversation structures. Try to expand your vocabulary with more food-related terms. Your grammar is quite good, especially with verb conjugations. Keep practicing!',
+    tool_calls: [
+      {
+        name: 'generatePostConversationSummary',
+        arguments: '{}'
+      }
+    ]
+  }
+};
+
+// Mock response counter to cycle through responses
+let mockResponseCounter = 0;
+
 app.post('/api/chat', async (req, res) => {
   try {
-    const { messages, language, scenario } = req.body;
+    const { messages, language, scenario, enableTools } = req.body;
+    const useMockMode = !process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'sk-test-key' || process.env.MOCK_MODE === 'true';
     
+    // Use mock mode if no API key is provided or if mock mode is explicitly enabled
+    if (useMockMode) {
+      console.log('Using mock mode for chat response');
+      
+      // Determine which mock response to send based on the message content
+      let mockResponse;
+      
+      if (messages.length === 0) {
+        // Initial message
+        mockResponse = mockResponses.initial;
+      } else {
+        const userMessage = messages[messages.length - 1].content.toLowerCase();
+        
+        if (userMessage.includes('bonjour') || userMessage.includes('salut') || userMessage.includes('hello')) {
+          mockResponse = mockResponses.greeting;
+        } else if (userMessage.includes('restaurant') || userMessage.includes('manger') || userMessage.includes('food')) {
+          mockResponse = mockResponses.restaurant;
+        } else if (userMessage.includes('je suis allé') || userMessage.includes('j\'ai mangé')) {
+          mockResponse = mockResponses.correction;
+        } else if (userMessage.includes('merci') || userMessage.includes('thank') || userMessage.includes('goodbye')) {
+          mockResponse = mockResponses.goodbye;
+        } else {
+          // Cycle through responses for other messages
+          const responseKeys = Object.keys(mockResponses);
+          const responseKey = responseKeys[mockResponseCounter % responseKeys.length];
+          mockResponse = mockResponses[responseKey];
+          mockResponseCounter++;
+        }
+      }
+      
+      // Only include tool calls if tools are enabled
+      if (!enableTools) {
+        delete mockResponse.tool_calls;
+      }
+      
+      return res.json({ message: mockResponse });
+    }
+    
+    // Real API mode
     if (!openai) {
       // Check if API key is provided
       const apiKey = process.env.OPENAI_API_KEY;
@@ -91,12 +206,160 @@ app.post('/api/chat', async (req, res) => {
     // Combine system message with user messages
     const allMessages = [systemMessage, ...messages];
     
-    // Call OpenAI API
-    const completion = await openai.chat.completions.create({
+    // Define the API call options
+    const apiOptions = {
       model: 'gpt-3.5-turbo',
       messages: allMessages,
       max_tokens: 500
-    });
+    };
+    
+    // Add tools if enabled
+    if (enableTools) {
+      apiOptions.tools = [
+        {
+          type: 'function',
+          function: {
+            name: 'startConversation',
+            description: 'Start a new conversation with the specified scenario',
+            parameters: {
+              type: 'object',
+              properties: {
+                scenarioId: {
+                  type: 'string',
+                  description: 'The ID of the scenario to start'
+                }
+              },
+              required: ['scenarioId']
+            }
+          }
+        },
+        {
+          type: 'function',
+          function: {
+            name: 'endConversation',
+            description: 'End the current conversation and trigger assessment',
+            parameters: {
+              type: 'object',
+              properties: {}
+            }
+          }
+        },
+        {
+          type: 'function',
+          function: {
+            name: 'addHint',
+            description: 'Add a hint for the user',
+            parameters: {
+              type: 'object',
+              properties: {
+                type: {
+                  type: 'string',
+                  description: 'The type of hint (vocabulary, grammar, pronunciation, etc.)'
+                },
+                content: {
+                  type: 'string',
+                  description: 'The content of the hint'
+                }
+              },
+              required: ['type', 'content']
+            }
+          }
+        },
+        {
+          type: 'function',
+          function: {
+            name: 'addChallenge',
+            description: 'Add a challenge for the user',
+            parameters: {
+              type: 'object',
+              properties: {
+                level: {
+                  type: 'string',
+                  description: 'The difficulty level of the challenge (beginner, intermediate, advanced)'
+                },
+                content: {
+                  type: 'string',
+                  description: 'The content of the challenge'
+                }
+              },
+              required: ['level', 'content']
+            }
+          }
+        },
+        {
+          type: 'function',
+          function: {
+            name: 'addToVocab',
+            description: 'Add a word to the user\'s vocabulary list',
+            parameters: {
+              type: 'object',
+              properties: {
+                word: {
+                  type: 'string',
+                  description: 'The word to add'
+                }
+              },
+              required: ['word']
+            }
+          }
+        },
+        {
+          type: 'function',
+          function: {
+            name: 'adjustVocabPriority',
+            description: 'Adjust the priority of a word in the vocabulary list',
+            parameters: {
+              type: 'object',
+              properties: {
+                word: {
+                  type: 'string',
+                  description: 'The word to adjust'
+                },
+                delta: {
+                  type: 'number',
+                  description: 'The change in priority (-3 to +3)'
+                }
+              },
+              required: ['word', 'delta']
+            }
+          }
+        },
+        {
+          type: 'function',
+          function: {
+            name: 'generatePostConversationSummary',
+            description: 'Generate a summary of the conversation',
+            parameters: {
+              type: 'object',
+              properties: {}
+            }
+          }
+        },
+        {
+          type: 'function',
+          function: {
+            name: 'createCorrectionDialogueBox',
+            description: 'Create a correction dialogue box',
+            parameters: {
+              type: 'object',
+              properties: {
+                items: {
+                  type: 'array',
+                  description: 'Array of items to correct',
+                  items: {
+                    type: 'string'
+                  }
+                }
+              },
+              required: ['items']
+            }
+          }
+        }
+      ];
+    }
+    
+    // Call OpenAI API
+    const completion = await openai.chat.completions.create(apiOptions);
     
     res.json({ message: completion.choices[0].message });
   } catch (error) {

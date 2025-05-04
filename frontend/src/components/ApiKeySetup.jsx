@@ -27,7 +27,7 @@ const ApiKeySetup = ({ onApiKeySubmit }) => {
     
     try {
       // Send API key to backend
-      await axios.post('https://work-2-thsfslggwztiguwl.prod-runtime.all-hands.dev/api/setup-env', {
+      await axios.post('https://work-2-zxfdpajvkmbapyvk.prod-runtime.all-hands.dev/api/setup-env', {
         apiKey: apiKey
       });
       
@@ -50,6 +50,37 @@ const ApiKeySetup = ({ onApiKeySubmit }) => {
     } finally {
       setLoading(false);
     }
+  };
+  
+  const handleTestMode = () => {
+    setLoading(true);
+    
+    // Use a test key for mock mode
+    const testKey = 'sk-test-key';
+    
+    // Store test key in localStorage
+    localStorage.setItem('openai_api_key', testKey);
+    
+    // Send test key to backend
+    axios.post('https://work-2-zxfdpajvkmbapyvk.prod-runtime.all-hands.dev/api/setup-env', {
+      apiKey: testKey
+    })
+    .then(() => {
+      // Notify parent component
+      onApiKeySubmit(true);
+      
+      // Navigate to home page
+      navigate('/');
+    })
+    .catch(error => {
+      console.error('Error setting up test mode:', error);
+      // Even if there's an error, we'll still proceed to the app in test mode
+      onApiKeySubmit(true);
+      navigate('/');
+    })
+    .finally(() => {
+      setLoading(false);
+    });
   };
 
   return (
@@ -83,6 +114,23 @@ const ApiKeySetup = ({ onApiKeySubmit }) => {
         >
           {loading ? 'Setting up...' : 'Start Learning'}
         </button>
+        
+        <div className="separator">
+          <span>OR</span>
+        </div>
+        
+        <button 
+          type="button" 
+          className="test-mode-btn"
+          onClick={handleTestMode}
+          disabled={loading}
+        >
+          {loading ? 'Setting up...' : 'Try Demo Mode (No API Key Required)'}
+        </button>
+        
+        <p className="test-mode-note">
+          Demo mode uses pre-defined responses for testing purposes.
+        </p>
       </form>
     </div>
   );
